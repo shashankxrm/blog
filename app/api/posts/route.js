@@ -1,52 +1,80 @@
-import axios from 'axios';
+import Post from '@/database/models/Post';
+import mongoose from 'mongoose';
+import { NextResponse } from 'next/server';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3001', // Adjust the base URL as needed
-});
+const mongoURI ='mongodb+srv://shashankxrm:iNCORRECT%4045@cluster0.jnrtl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
-export const GET = async (req, res) => {
-  const { query } = req;
+mongoose.connect(mongoURI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+export const GET = async (req) => {
+  const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+  const id = searchParams.get('id');
+
   try {
-    if (query.id) {
+    if (id) {
       // Get a single post by ID
-      const response = await api.get(`/posts/${query.id}`);
-      res.status(200).json(response.data);
+      const post = await Post.findById(id);
+      if (!post) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
+      return NextResponse.json(post, { status: 200 });
     } else {
       // Get all posts
-      const response = await api.get('/posts');
-      res.status(200).json(response.data);
+      const posts = await Post.find();
+      return NextResponse.json(posts, { status: 200 });
     }
   } catch (error) {
-    res.status(error.response.status).json({ error: error.message });
+    console.error('Error fetching posts:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 };
 
-export const POST = async (req, res) => {
-  const { body } = req;
+export const POST = async (req) => {
   try {
-    const response = await api.post('/posts', body);
-    res.status(201).json(response.data);
+    const { title, content } = await req.json();
+    const newPost = new Post({ title, content });
+    await newPost.save();
+    return NextResponse.json(newPost, { status: 201 });
   } catch (error) {
-    res.status(error.response.status).json({ error: error.message });
+    console.error('Error creating post:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 };
 
-export const PUT = async (req, res) => {
-  const { query, body } = req;
+export const PUT = async (req) => {
+  const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+  const id = searchParams.get('id');
+
   try {
-    const response = await api.put(`/posts/${query.id}`, body);
-    res.status(200).json(response.data);
+    const { title, content } = await req.json();
+    const post = await Post.findById(id);
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+    post.title = title || post.title;
+    post.content = content || post.content;
+    await post.save();
+    return NextResponse.json(post, { status: 200 });
   } catch (error) {
-    res.status(error.response.status).json({ error: error.message });
+    console.error('Error updating post:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 };
 
-export const DELETE = async (req, res) => {
-  const { query } = req;
+export const DELETE = async (req) => {
+  const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+  const id = searchParams.get('id');
+
   try {
-    const response = await api.delete(`/posts/${query.id}`);
-    res.status(200).json(response.data);
+    const post = await Post.findByIdAndDelete(id);
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+    return NextResponse.json({ message: 'Post deleted successfully' }, { status: 200 });
   } catch (error) {
-    res.status(error.response.status).json({ error: error.message });
+    console.error('Error deleting post:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 };

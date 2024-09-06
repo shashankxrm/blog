@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // Connect to MongoDB
-const mongoURI = 'mongodb+srv://shashankxrm:iNCORRECT%4045@cluster0.jnrtl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = process.env.MONGODB_URI || 'your-mongodb-connection-string';
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
@@ -22,6 +22,7 @@ app.get('/posts', async (req, res) => {
     const posts = await Post.find();
     res.json(posts);
   } catch (error) {
+    console.error('Error fetching posts:', error);
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
 });
@@ -36,6 +37,7 @@ app.get('/posts/:id', async (req, res) => {
       res.status(404).json({ error: 'Post not found' });
     }
   } catch (error) {
+    console.error('Error fetching post:', error);
     res.status(500).json({ error: 'Failed to fetch post' });
   }
 });
@@ -51,6 +53,7 @@ app.post('/posts', async (req, res) => {
     await post.save();
     res.status(201).json(post);
   } catch (error) {
+    console.error('Error creating post:', error);
     res.status(500).json({ error: 'Failed to create post' });
   }
 });
@@ -69,6 +72,7 @@ app.put('/posts/:id', async (req, res) => {
       res.status(404).json({ error: 'Post not found' });
     }
   } catch (error) {
+    console.error('Error updating post:', error);
     res.status(500).json({ error: 'Failed to update post' });
   }
 });
@@ -83,6 +87,7 @@ app.delete('/posts/:id', async (req, res) => {
       res.status(404).json({ error: 'Post not found' });
     }
   } catch (error) {
+    console.error('Error deleting post:', error);
     res.status(500).json({ error: 'Failed to delete post' });
   }
 });
