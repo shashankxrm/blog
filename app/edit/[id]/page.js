@@ -17,7 +17,7 @@ const EditPostPage = () => {
       const fetchPost = async () => {
         try {
           console.log(`Fetching post with id: ${id}`);
-          const response = await axios.get(`/api/posts?id=${id}`);
+          const response = await axios.get(`/posts/${id}`);
           console.log('API response:', response);
           if (response.data) {
             setPost(response.data);

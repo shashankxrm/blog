@@ -1,36 +1,55 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Header from '@/components/Header';
+import Form from '@/components/Form';
 
-import Header from '../../components/Header';
-import { useRouter } from 'next/navigation';
 
-const ViewPostPage = () => {
+const EditPostPage = () => {
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { id } = router.query;
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
 
   useEffect(() => {
     if (id) {
       const fetchPost = async () => {
-        const response = await axios.get(`/api/posts?id=${id}`);
-        setPost(response.data);
+        try {
+          console.log(`Fetching post with id: ${id}`);
+          const response = await axios.get(`/api/posts?id=${id}`);
+          console.log('API response:', response);
+          if (response.data) {
+            setPost(response.data);
+          } else {
+            console.error('No post data found in response');
+          }
+        } catch (error) {
+          console.error('Error fetching post:', error);
+        } finally {
+          setLoading(false);
+        }
       };
       fetchPost();
+    } else {
+      console.error('No id found in query parameters');
+      setLoading(false);
     }
   }, [id]);
 
-  if (!post) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!post) return <div>Post not found</div>;
 
   return (
     <div>
       <Header />
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-        <p>{post.content}</p>
+        {/* Render the form with the post data */}
+        <Form post={post} />
       </div>
     </div>
   );
 };
 
-export default ViewPostPage;
+export default EditPostPage;
